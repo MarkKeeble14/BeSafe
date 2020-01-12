@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "473399514689",
+    "firebase_url": "https://besafe-d3e33.firebaseio.com",
+    "project_id": "besafe-d3e33",
+    "storage_bucket": "besafe-d3e33.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:473399514689:android:69ebe5f2406d2361a1d8c0",
+        "android_client_info": {
+          "package_name": "com.example.besafe"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "473399514689-ter6r42ncrkht0vdh4oqto3fcvt5b1ld.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.besafe",
+            "certificate_hash": "3e2b9a303e0b86d0dc897930b279b989652d0ed8"
+          }
+        },
+        {
+          "client_id": "473399514689-s5oifimvliajh0jnlbqh7js7knjpkd73.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDTsB7UhWVNGxik_FXS1ecjxU05zTKjkco"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "473399514689-s5oifimvliajh0jnlbqh7js7knjpkd73.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
