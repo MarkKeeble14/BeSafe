@@ -208,6 +208,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         Log.i(TAG, "onConnected()");
+//        getUsers();
         getLastLocation();
         recoverGeofenceMarker();
     }
@@ -486,35 +487,36 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+
     public void addUser(Location location) {
         database = FirebaseDatabase.getInstance("https://besafe-55c8d.firebaseio.com/");
         DatabaseReference myRef = database.getReference("Users");
-        UserLocation userLocation = new UserLocation(new LatLng(location.getLatitude(), location.getLongitude()));
+        UserLocation userLocation = new UserLocation(location.getLatitude(), location.getLongitude());
         String android_id = Secure.getString(getApplicationContext().getContentResolver(),
                 Secure.ANDROID_ID);
         User user = new User(android_id, getPhoneNumber(), userLocation, false);
-        myRef.push().setValue(user);
+        myRef.child(user.getDeviceId()).setValue(user);
     }
 
-    public void limitDuplicateUser(Location location) {
-        ValueEventListener postListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                // Get Post object and use the values to update the UI
-                User user = dataSnapshot.getValue(User.class);
-
-                // ...
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                // Getting Post failed, log a message
-                Log.w(TAG, "loadPost:onCancelled", databaseError.toException());
-                // ...
-            }
-        };
-    }
-
+//    public void getUsers() {
+////
+////        database = FirebaseDatabase.getInstance("https://besafe-55c8d.firebaseio.com/");
+////        database.getReference().child("Users")
+////                .addListenerForSingleValueEvent(new ValueEventListener() {
+////                    @Override
+////                    public void onDataChange(DataSnapshot dataSnapshot) {
+////                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+////                            User user = snapshot.getValue(User.class);
+////                            users.add(user);
+////                        }
+////                    }
+////                    @Override
+////                    public void onCancelled(DatabaseError databaseError) {
+////                    }
+////                });
+////
+////
+////    }
 
 
     @SuppressLint("MissingPermission")
@@ -542,9 +544,7 @@ public class MainActivity extends AppCompatActivity
                         }
                 );
             } else {
-                Toast.makeText(this, "Turn on location", Toast.LENGTH_LONG).show();
-                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                startActivity(intent);
+
             }
         } else {
             requestPermissions();

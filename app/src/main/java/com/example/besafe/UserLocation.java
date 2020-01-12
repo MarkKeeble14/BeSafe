@@ -1,23 +1,30 @@
 package com.example.besafe;
 
-import com.google.android.gms.maps.model.LatLng;
-
 public class UserLocation {
-    LatLng latlng;
+
+    private double x;
+    private double y;
 
     public UserLocation() {}
 
-    public UserLocation(LatLng latlng){
-        this.latlng = latlng;
+    public UserLocation(double x, double y){
+        this.x = x;
+        this.y = y;
     }
 
-    public LatLng getLatlng() {
-        return latlng;
+    public double getX() {
+        return this.x;
     }
 
-    public void setLatlng(LatLng latlng) {
-        this.latlng = latlng;
+    public void setX(double newValue) {
+        this.x = newValue;
+    }
+    public double getY() {
+        return this.y;
     }
 
-    
+    public void setY(double newValue) {
+        this.y = newValue;
+    }
+
 }
