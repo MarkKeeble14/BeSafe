@@ -5,6 +5,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import android.content.ContentResolver;
+import android.content.IntentFilter;
+import android.database.Cursor;
+import android.net.Uri;
+import android.provider.Settings.Secure;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -16,8 +21,13 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Looper;
 import android.provider.Settings;
+import android.provider.Telephony;
+import android.telephony.SmsManager;
+import android.telephony.SmsMessage;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.widget.Adapter;
+import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,17 +38,31 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import org.json.JSONArray;
+import org.w3c.dom.Text;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
+    public static final String OTP_REGEX = "[0-9]{1,6}";
+
+    /* __________________________________*/
+    private int stage = 0;
+    private int count = 0;
+    /* __________________________________*/
 
     private Location currentBestLocation = null;
     protected LocationManager locationManager;
     protected LocationListener locationListener;
 
     private FirebaseDatabase database;
-
 
     int PERMISSION_ID = 44;
     FusedLocationProviderClient mFusedLocationClient;
@@ -47,8 +71,32 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        SmsReceiver.bindListener(new SmsListener() {
 
+            @Override
+            public void messageReceived(String messageText) {
+                //From the received text string you may do string operations to get the required OTP
+                //It depends on your SMS format
+                Log.e("Text", messageText);
+                Toast.makeText(MainActivity.this,"Message: " + messageText,Toast.LENGTH_LONG).show();
+
+                /* __________________________________*/
+                boolean help;
+                // boolean safe;
+                // int floor;
+                /* __________________________________*/
+
+                switch (messageText) {
+                    case "1": sendSMS();
+                    help = true;
+                    break;
+                    case "2": sendSMS();
+                    help = false;
+                    break;
+                }
+            }
+        });
+        setContentView(R.layout.activity_main);
 
         latTextView = findViewById(R.id.latTextView);
         lonTextView = findViewById(R.id.longTextView);
@@ -56,13 +104,70 @@ public class MainActivity extends AppCompatActivity {
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         getLastLocation();
 
+        if (checkPermissions()) {
+            sendSMS();
+        } else {
+            requestPermissions();
+        }
     }
 
+    public void sendSMS() {
+        FirebaseDatabase database = FirebaseDatabase.getInstance("https://besafe-55c8d.firebaseio.com/");
+        DatabaseReference myRef = database.getReference("User");
+
+        // Read FireBase
+        myRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                // Get Snapshot
+                String re = dataSnapshot.child("phoneNo").getValue(String.class);
+
+                // Send Text
+                if (re.length() != 0) {
+                    SmsManager sms = SmsManager.getSmsManagerForSubscriptionId(10);
+                    int count = getCount();
+                    switch (count) {
+                        case 0: sms.sendTextMessage(re, null, "Do you need help?:\n1) Yes\n2) No", null, null);
+                        break;
+                        case 1: sms.sendTextMessage(re, null, "Are You Currently in a Safe Space?:\n1) Yes\n2) No", null, null);
+                        break;
+                        case 2: sms.sendTextMessage(re, null, "Which floor are you on?:\n(NUMBER): ", null, null);
+                    }
+                    incrementCount();
+                    Log.d("Sent", "Message Sent to: " + re);
+                }
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private int getCount() {
+        return count;
+    }
+
+    private void incrementCount() {
+        count++;
+    }
 
     @SuppressLint("MissingPermission")
-    private void getLastLocation(){
+    private String getPhoneNumber() {
+        TelephonyManager tMgr = (TelephonyManager) this.getSystemService(Context.TELEPHONY_SERVICE);
+        String phoneNumber = tMgr.getLine1Number();
 
+        return phoneNumber;
+    }
 
+    private String getDeviceID() {
+        String android_id = Secure.getString(this.getContentResolver(), Secure.ANDROID_ID);
+
+        return android_id;
+    }
+
+    @SuppressLint("MissingPermission")
+    private void getLastLocation() {
         if (checkPermissions()) {
             if (isLocationEnabled()) {
                 mFusedLocationClient.getLastLocation().addOnCompleteListener(
@@ -81,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
 
                                     UserLocation ul = new UserLocation(location.getLatitude(), location.getLongitude());
 
-                                    User user = new User("AS90123", "6042314921", ul, false);
+                                    User user = new User(getDeviceID(), getPhoneNumber(), ul, false);
                                     myRef.setValue(user);
 
                                 }
@@ -97,7 +202,6 @@ public class MainActivity extends AppCompatActivity {
             requestPermissions();
         }
     }
-
 
     @SuppressLint("MissingPermission")
     private void requestNewLocationData(){
@@ -127,7 +231,12 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean checkPermissions() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED &&
+                        ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED &&
+                            ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED &&
+                                ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED &&
+                                    ActivityCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_GRANTED) {
             return true;
         }
         return false;
@@ -136,7 +245,9 @@ public class MainActivity extends AppCompatActivity {
     private void requestPermissions() {
         ActivityCompat.requestPermissions(
                 this,
-                new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION},
+                new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.SEND_SMS, Manifest.permission.READ_CONTACTS, Manifest.permission.READ_PHONE_STATE,
+                Manifest.permission.READ_SMS, Manifest.permission.RECEIVE_SMS},
                 PERMISSION_ID
         );
     }
@@ -157,7 +268,5 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
-
 }
 
