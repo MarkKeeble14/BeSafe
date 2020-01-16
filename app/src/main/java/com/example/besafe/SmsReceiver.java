@@ -17,7 +17,7 @@ public class SmsReceiver extends BroadcastReceiver {
 
         Object[] pdus = (Object[]) data.get("pdus");
 
-        for(int i=0;i<pdus.length;i++){
+        for(int i=0; i<pdus.length; i++){
             SmsMessage smsMessage = SmsMessage.createFromPdu((byte[]) pdus[i]);
 
             String sender = smsMessage.getDisplayOriginatingAddress();

@@ -81,27 +81,25 @@ public class MainActivity extends AppCompatActivity
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         OnMapReadyCallback
-{
-    public static final String OTP_REGEX = "[0-9]{1,6}";
+    {
 
-    /* __________________________________*/
-    private int count = 0;
-    private LatLng bcit;
-
-    private int buffer = 0;
-    /* __________________________________*/
+    // Locations
+    private LatLng bcit = new LatLng(49.2500, -123.0000);
 
     private Location currentBestLocation = null;
     protected LocationManager locationManager;
     protected LocationListener locationListener;
 
+    // Timer Event
     Handler handler = new Handler();
     Runnable runnable;
     int delay = 20*1000; //Delay for 25 seconds.  One second = 1000 milliseconds.
 
+    // Tag
     private String TAG = "BlHA";
-
     private static final String NOTIFICATION_MSG = "NOTIFICATION MSG";
+
+    // Google
     private GoogleApiClient googleApiClient;
     private MapFragment mapFragment;
     private GeofencingClient geofencingClient;
@@ -120,8 +118,13 @@ public class MainActivity extends AppCompatActivity
     FusedLocationProviderClient mFusedLocationClient;
     TextView latTextView, lonTextView;
 
-    private int question = 0;
+    public LatLng getBCIT() {
+        return new LatLng(49.2500, -123.000);
+    }
 
+    public void setBCIT(LatLng newValue) {
+            this.bcit = newValue;
+        }
 
 //    public void response(String res) {
 //        sendSMS("What floor are you currently on?");
@@ -136,62 +139,47 @@ public class MainActivity extends AppCompatActivity
 //    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         SmsReceiver.bindListener(new SmsListener() {
+             @Override
+             public void messageReceived(String messageText) {
+             //From the received text string you may do string operations to get the required OTP
+             //It depends on your SMS format
 
-                     @Override
-                     public void messageReceived(String messageText) {
-                         //From the received text string you may do string operations to get the required OTP
-                         //It depends on your SMS format
+             switch (messageText) {
+                 case "1": sendSMS("Please remain calm. Help is on the way.");
+                 break;
+                 case "2": sendSMS("Are you able to exit the bu");
+             }
+         }
+     });
 
+    setContentView(R.layout.activity_main);
 
-                         switch (messageText) {
-                             case "1": sendSMS("Please remain calm. Help is on the way.");
-                             break;
-                             case "2": sendSMS("Are you able to exit the bu");
-                         }
-                     }
-                 });
+    latTextView = findViewById(R.id.latTextView);
+    lonTextView = findViewById(R.id.longTextView);
 
-                setContentView(R.layout.activity_main);
+    mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+    geofencingClient = LocationServices.getGeofencingClient(this);
 
-                latTextView = findViewById(R.id.latTextView);
-                lonTextView = findViewById(R.id.longTextView);
+    setBCIT(bcit);
 
-                mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-                geofencingClient = LocationServices.getGeofencingClient(this);
+    initGMaps();
+    createGoogleApi();
 
-                initGMaps();
-                createGoogleApi();
-
-                new Timer().scheduleAtFixedRate(new TimerTask() {
-                    @Override
-                    public void run() {
-                        getLastLocation();
-                    }
-                }, 0, 120000);
-
-      }
-
-
-
-    public LatLng getBcit() {
-
-        return new LatLng(49.2500, -123.000);
+    new Timer().scheduleAtFixedRate(new TimerTask() {
+        @Override
+        public void run() {
+            getLastLocation();
+        }
+    }, 0, 120000);
     }
 
-    public void setBcit(LatLng newValue) {
-        this.bcit = newValue;
-    }
-
-//    @Override
 //    public void onMapClick(LatLng latLng) {
 //        Log.d(TAG, "onMapClick("+latLng +")");
 //        markerForGeofence(latLng);
 //    }
 //
-//    @Override
 //    public boolean onMarkerClick(Marker marker) {
 //        Log.d(TAG, "onMarkerClickListener: " + marker.getPosition() );
 //        return false;
@@ -199,11 +187,9 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onResume() {
-        //start handler as activity become visible
-
         handler.postDelayed( runnable = new Runnable() {
             public void run() {
-                if (distFrom(getBcit().latitude, getBcit().longitude, currentUser.getLocation().getX(), currentUser.getLocation().getY()) < GEOFENCE_RADIUS && currentUser.isFlag()) {
+                if (distFrom(getBCIT().latitude, getBCIT().longitude, currentUser.getLocation().getX(), currentUser.getLocation().getY()) < GEOFENCE_RADIUS && currentUser.isFlag()) {
                     sendSMS("Crisis Alert!! A Fire has been reported in your " + GEOFENCE_RADIUS
                         + " meter radius, Response either with 1) You are safe. 2) You require assistance");
                 } else {
@@ -259,6 +245,7 @@ public class MainActivity extends AppCompatActivity
     private final String KEY_GEOFENCE_LAT = "GEOFENCE LATITUDE";
     private final String KEY_GEOFENCE_LON = "GEOFENCE LONGITUDE";
 
+    // Save a Geofence
     private void saveGeofence() {
         Log.d(TAG, "saveGeofence()");
         SharedPreferences sharedPref = getPreferences( Context.MODE_PRIVATE );
@@ -303,6 +290,7 @@ public class MainActivity extends AppCompatActivity
             return geoFencePendingIntent;
         }
     }
+
     // Add the created GeofenceRequest to the device's monitoring list
     private void addGeofence(GeofencingRequest request) {
         Log.d(TAG, "addGeofence");
@@ -348,8 +336,6 @@ public class MainActivity extends AppCompatActivity
                         SmsManager sms = SmsManager.getDefault();
                         sms.sendTextMessage(re, null, s, null, null);
 
-                        buffer++;
-                        incrementCount();
                         Log.d("Sent", "Message Sent to: " + re);
                     }
                 }
@@ -361,14 +347,6 @@ public class MainActivity extends AppCompatActivity
         } else {
             requestPermissions();
         }
-    }
-
-    private int getCount() {
-        return count;
-    }
-
-    private void incrementCount() {
-        count++;
     }
 
     @SuppressLint("MissingPermission")
@@ -427,6 +405,8 @@ public class MainActivity extends AppCompatActivity
     private Marker geoFenceMarker;
     private void markerForGeofence(LatLng latLng) {
         Log.i(TAG, "markerForGeofence("+latLng+")");
+        Log.d("marker", "markerForGeofence("+latLng+")");
+
         String title = latLng.latitude + ", " + latLng.longitude;
         // Define marker options
         MarkerOptions markerOptions = new MarkerOptions()

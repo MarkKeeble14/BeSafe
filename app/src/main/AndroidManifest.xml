@@ -38,7 +38,6 @@ package="com.example.besafe">
         android:name=".GeofenceTransitionService"
         android:enabled="true"
         android:exported="false">
-
         <intent-filter>
             <action android:name=".GeofenceTransitionService"/>
         </intent-filter>
@@ -48,10 +47,6 @@ package="com.example.besafe">
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
-
-        <!--            <service android:name=".GeofenceTransitionService" />-->
-
-
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
@@ -59,7 +54,5 @@ package="com.example.besafe">
     <meta-data
         android:name="com.google.android.geo.API_KEY"
         android:value="AIzaSyBTgivjRvBIYmvtPwY37BVX00MNzK-xS4Y"/>
-
 </application>
-
 </manifest>
