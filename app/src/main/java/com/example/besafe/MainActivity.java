@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         OnMapReadyCallback
-    {
+{
 
     // Locations
     private LatLng bcit = new LatLng(49.2500, -123.0000);
@@ -123,10 +123,10 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void setBCIT(LatLng newValue) {
-            this.bcit = newValue;
-        }
+        this.bcit = newValue;
+    }
 
-//    public void response(String res) {
+    //    public void response(String res) {
 //        sendSMS("What floor are you currently on?");
 //
 //        switch (messageText) {
@@ -141,38 +141,38 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         SmsReceiver.bindListener(new SmsListener() {
-             @Override
-             public void messageReceived(String messageText) {
-             //From the received text string you may do string operations to get the required OTP
-             //It depends on your SMS format
+            @Override
+            public void messageReceived(String messageText) {
+                //From the received text string you may do string operations to get the required OTP
+                //It depends on your SMS format
 
-             switch (messageText) {
-                 case "1": sendSMS("Please remain calm. Help is on the way.");
-                 break;
-                 case "2": sendSMS("Are you able to exit the bu");
-             }
-         }
-     });
+                switch (messageText) {
+                    case "1": sendSMS("Please remain calm. Help is on the way.");
+                        break;
+                    case "2": sendSMS("Are you able to exit the bu");
+                }
+            }
+        });
 
-    setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_main);
 
-    latTextView = findViewById(R.id.latTextView);
-    lonTextView = findViewById(R.id.longTextView);
+        latTextView = findViewById(R.id.latTextView);
+        lonTextView = findViewById(R.id.longTextView);
 
-    mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-    geofencingClient = LocationServices.getGeofencingClient(this);
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        geofencingClient = LocationServices.getGeofencingClient(this);
 
-    setBCIT(bcit);
+        setBCIT(bcit);
 
-    initGMaps();
-    createGoogleApi();
+        initGMaps();
+        createGoogleApi();
 
-    new Timer().scheduleAtFixedRate(new TimerTask() {
-        @Override
-        public void run() {
-            getLastLocation();
-        }
-    }, 0, 120000);
+        new Timer().scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                getLastLocation();
+            }
+        }, 0, 120000);
     }
 
 //    public void onMapClick(LatLng latLng) {
@@ -191,7 +191,7 @@ public class MainActivity extends AppCompatActivity
             public void run() {
                 if (distFrom(getBCIT().latitude, getBCIT().longitude, currentUser.getLocation().getX(), currentUser.getLocation().getY()) < GEOFENCE_RADIUS && currentUser.isFlag()) {
                     sendSMS("Crisis Alert!! A Fire has been reported in your " + GEOFENCE_RADIUS
-                        + " meter radius, Response either with 1) You are safe. 2) You require assistance");
+                            + " meter radius, Response either with 1) You are safe. 2) You require assistance");
                 } else {
 //                    sendSMS("You're not in the Geofence");
                 }

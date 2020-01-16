@@ -20,7 +20,6 @@ import com.google.android.gms.location.GeofencingEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class GeofenceTransitionService extends IntentService {
 
     private static final String TAG = GeofenceTransitionService.class.getSimpleName();
